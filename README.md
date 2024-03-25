@@ -26,13 +26,17 @@ Je souhaiterais également faire une démarche similaire avec d'autres objets/mo
 </p>
 
 ## la carte interactive
-Différents itinéraires seront affichés sur la carte (comme je l'ai présenté ci-dessus). L'utilisateur de la carte aura la possibilité de cliquer sur chaque monument de la carte et ainsi une autre page web s'ouvre avec des audios, des explications et des videos sur le lieu en question. 
+Différents itinéraires seront affichés sur la carte (comme je l'ai présenté ci-dessus). L'utilisateur de la carte aura la possibilité de cliquer sur chaque monument de la carte et ainsi une autre page web s'ouvre avec des audios, des explications et des videos sur le lieu en question. A chaque fois, l'utilisateur devra jouer à un petit jeu pour réussir l'étape : un quizz ou un puzzle par exemple (je vais tenter de faire ceci avec d3). 
 
 ## questions : 
 
 Comment mettre une option pour localiser la personne qui utilise la carte interactive (pour que ses données GPS de son téléphone apparaissent sur la carte ) ? Quel serait le code associé ? Leaflet ? 
 
-Je souhaite mélanger d3, leflet et leaflet routing machine, afin de comparer l'utilisation de ces trois outils. est-ce possible ? 
+Je souhaite mélanger d3, leaflet et leaflet routing machine, afin de comparer l'utilisation de ces trois outils. est-ce possible ? 
+
+Quel bibliothèque utiliser pour créer un puzzle ? (découper une image en plusieurs morceaux et laisser l'utilisateur les recoller) ? 
+
+
 
 
 
