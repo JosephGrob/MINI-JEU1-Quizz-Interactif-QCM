@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz : L'Église luthérienne évangélique et la Réforme protestante</title>
+    <style>
+        /* Styles de base pour le body de la page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            padding-top: 8vh; 
+            margin: 0;
+            position: relative;
+        }
+        
+
+        /* Style pour le conteneur du quiz */
+        .quiz-container {
+                width: 40%; 
+                margin: 5vh auto; 
+                padding: 2vh 1vw; 
+                background-color: #e6fffb;
+                border: 0.2vw solid #00e69d;
+                border-radius: 1vw; 
+                box-shadow: 0 0 1vw rgba(0, 0, 0, 0.1); 
+        
+        /* Styles pour les titres, sous-titres */
+        }
+        h1 {
+            color: #0073e6;
+            font-size: 3vw; 
+            margin-bottom: 2vh; 
+        }
+    
+        h2 {
+            color: #080808;
+            font-size: 1.5vw; 
+            margin-bottom: 3vh;
+        }
+    
+        /* Styles pour les options de réponse */
+        .answer {
+            padding: 1.5vh 2vw; 
+            margin: 1vh 0; 
+            cursor: pointer;
+            border-radius: 1vw; 
+            transition: background-color 0.3s ease;
+            font-size: 1.8vw; 
+        }
+    
+        .answer:hover {
+            background-color: #d0e7ff; /* Bleu clair au survol */
+        }
+    
+        /* Styles spécifiques pour les réponses correctes ou incorrectes */
+        .correct {
+            background-color: #0ddf3e;
+            border: 0.2vw solid #28a745; 
+            color: #155724;
+        }
+    
+        .incorrect {
+            background-color: #c80f1e;
+            border: 0.2vw solid #dc3545; 
+            color: #721c24;
+        }
+    
+        /* Messages des résultats */
+        #result {
+            font-size: 1.8vw; 
+            font-weight: bold;
+            margin-top: 2vh;
+            border: none;
+        }
+        /* Style du score dans le message des résultats */
+        #final-score {
+            font-size: 1.8vw; 
+            font-weight: bold;
+            margin-top: 3vh;
+            color: #020202;
+        }
+    
+        /* Style du message indiquant la réussite ou non du quizz dans le message des résultats */
+        #final-result-message {
+            font-size: 2.5vw; 
+            font-weight: bold;
+            margin-top: 2vh;
+            color: #0073e6;
+        }
+    
+        /* Style de l'indice, de son bouton et de son texte */
+        #hint-container {
+            margin-top: 2vh;
+        }
+    
+        #hint-btn {
+            padding: 1.5vh 2vw; 
+            font-size: 1.2vw; 
+            background-color: #0073e6;
+            color: white;
+            border: none;
+            border-radius: 0.5vw; 
+            cursor: pointer;
+        }
+    
+        #hint-btn:hover {
+            background-color: #005bb5;
+        }
+    
+        #hint {
+            font-size: 1.2vw; 
+            font-style: italic;
+            color: #005bb5;
+            margin-top: 1vh;
+        }
+    
+        /* Style de la croix pour revenir à l'accueil = index.html */
+        #close-btn {
+            position: absolute;
+            top: 0vh;
+            left: 0vw;
+            font-size: 2vw; 
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #f9f9f9;
+            padding: 0.5vw;
+            border-radius: 50%;
+            border: 0.2vw solid black;
+        }
+    
+        #close-btn:hover {
+            color: white;
+            background-color: red;
+        }
+    
+        /* Style et positionnement de l'image de gauche */
+        #left-image {
+            position: absolute;
+            top: 15vh; 
+            left: 5vw; 
+            width: 20vw; 
+            height: auto;
+            border: 0.3vw solid #ddd; 
+            border-radius: 1vw; 
+        }
+    
+        /* Style et positionnement de l'image de droite */
+        #right-image {
+            position: absolute;
+            top: 15vh;
+            right: 5vw;
+            width: 20vw;
+            height: auto;
+            border: 0.3vw solid #ddd;
+            border-radius: 1vw;
+        }
+    
+        /* Styles pour les options de réponse */
+        .answer-container {
+            border: 0.2vw solid #ccc; 
+            border-radius: 1vw; 
+            padding: 2vh; 
+            margin: 1vh 0; 
+            cursor: pointer; 
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+    
+        .answer-container:hover {
+            background-color: #f0f8ff; 
+            border-color: #0073e6; 
+        }
+    
+        /* Messages de résultat indiquant que c'est correcte pour chaque question */
+        #result.correct {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 1vh;
+            border-radius: 1vw;
+            font-size: 1.5vw; 
+            display: inline-block;
+        }
+    
+        /* Messages de résultat indiquant que c'est incorrecte pour chaque question */
+        #result.incorrect {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 1vh;
+            border-radius: 1vw;
+            font-size: 1.5vw; 
+            display: inline-block;
+        }
+    
+
+    </style>
+</head>
+<body>
+    <!-- bouton pour revenir à index.html -->
+    <a href="index.html" id="close-btn">&#10006;</a>
+
+    <!-- Titre principal -->
+    <h1 style="font-size: 28px; color: #003366; font-weight: bold; margin-top: 0px; margin-top: -50px; margin-left: 0px;">
+        Quiz : Découvrez l'Église luthérienne évangélique de Genève et son rôle dans la Réforme</h1>
+    <!-- Sous-titre -->
+    <h2 style="font-size: 18px; color: #555555; font-weight: normal; margin-top: 10px;">
+        Choisissez la bonne réponse parmi les trois propositions pour découvrir ce lieu emblématique.</h2>
+
+    <!-- Images décoratives -->
+    <img id="left-image" src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Evangelical_Lutheran_Church_Geneva.JPG" alt="Église luthérienne de Genève">
+    <img id="right-image" src="https://www.l-agenda.ch/wp-content/uploads/2017/09/Eglise-lutherienne.jpeg" alt="Intérieur de l'église luthérienne">
+
+    <!-- Conteneur du quiz avec indices, présentation des résultats -->
+    <div class="quiz-container">
+        <h2 id="question">Loading question...</h2>
+        <div id="answers"></div>
+        <div id="result"></div>
+        <div id="hint-container">
+            <button id="hint-btn">Demander un indice</button>
+            <div id="hint"></div>
+        </div>
+        <div id="final-score"></div>
+        <div id="final-result-message"></div>
+    </div>
+    <!-- Utilisation de la bibliothèque d3.js pour le script -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Lorsque la page est chargée, initialiser le quiz
+        document.addEventListener('DOMContentLoaded', function () {
+            // Données du quiz avec questions, réponses, et indices
+            const quizData = [
+                {
+                    question: "Au 16ème siècle, Genève est devenue un endroit très important pour un grand changement religieux, que nous appelons la Réforme protestante. Quand ce changement a-t-il commencé ici ?",
+                    answers: [
+                        { text: "1517", correct: false },
+                        { text: "1536", correct: true },
+                        { text: "1707", correct: false }
+                    ],
+                    hint: "Cela s'est passé après l'arrivée d'un homme nommé Jean Calvin, autour de 1535."
+                },
+                {
+                    question: "L'Église luthérienne de Genève a été influencée par un pays proche de la Suisse, également connu pour ses réformes protestantes. De quel pays venait la plupart des premiers membres ?",
+                    answers: [
+                        { text: "La France", correct: false },
+                        { text: "L'Allemagne", correct: true },
+                        { text: "La Suisse", correct: false }
+                    ],
+                    hint: "Ce pays est célèbre pour sa bière et les saucisses."
+                },
+                {
+                    question: "L'Église luthérienne de Genève ne ressemble pas à une église classique. Pourquoi est-ce le cas ?",
+                    answers: [
+                        { text: "Parce que Genève ne voulait pas de grandes églises visibles.", correct: true },
+                        { text: "Parce qu'elle a été construite comme une école.", correct: false },
+                        { text: "Parce qu'elle a été conçue par des architectes modernes.", correct: false }
+                    ],
+                    hint: "Les calvinistes voulaient que l'église soit discrète et ne se remarque pas trop."
+                },
+                {
+                    question: "L'Église luthérienne a été fondée sur des idées écrites dans un grand livre. Quel livre important a servi pour cette Église ?",
+                    answers: [
+                        { text: "Les 95 thèses de Luther", correct: false },
+                        { text: "La Confession d'Augsbourg", correct: true },
+                        { text: "L'Institution de Calvin", correct: false }
+                    ],
+                    hint: "Ce livre porte le nom d'une ville allemande célèbre."
+                },
+                {
+                    question: "L'Église luthérienne de Genève se trouve dans une rue qui porte un nom lié à une figure très importante de la Réforme. Sais-tu où elle se trouve ?",
+                    answers: [
+                        { text: "Rue Jean-Sénebier", correct: true },
+                        { text: "Rue Basse", correct: false },
+                        { text: "Rue Verdaine", correct: false }
+                    ],
+                    hint: "Penses au prénom de Calvin ..."
+                },
+                {
+                    question: "L'empereur d'Allemagne a soutenu l'Église luthérienne. Quel rôle a-t-il joué ?",
+                    answers: [
+                        { text: "Il a été pasteur honoraire.", correct: false },
+                        { text: "Il a financé sa construction.", correct: false },
+                        { text: "Il était protecteur officiel.", correct: true }
+                    ],
+                    hint: "Il a aidé à défendre l'église sans diriger les services."
+                },
+                {
+                    question: "Au XVIIIe siècle, il était difficile de trouver des églises luthériennes à Genève. Pourquoi ?",
+                    answers: [
+                        { text: "Parce qu'aucune autre église non réformée n'était autorisée.", correct: true },
+                        { text: "Parce que les luthériens n'avaient pas de lieux de culte.", correct: false },
+                        { text: "Parce que Genève acceptait toutes les religions.", correct: false }
+                    ],
+                    hint: "À cette époque, seule l'Église réformée était autorisée."
+                },
+                {
+                    question: "Martin Luther croyait que pour aller au paradis, il ne fallait pas faire beaucoup de bonnes actions, mais simplement avoir une connexion spéciale avec Dieu. Quel principe de Luther parle de cela ?",
+                    answers: [
+                
+                        { text: "La tolérance universelle.", correct: false },
+                        { text: "L'obéissance stricte aux lois de l'église.", correct: false },
+                        { text: "La justification par la foi seule.", correct: true }
+                    ],
+                    hint: "Luther pensait que la foi, et non les actions, était la clé pour être sauvé."
+                },
+                {
+                    question: "Un grand événement en France a forcé de nombreux protestants à fuir vers Genève. Quel était cet événement ?",
+                    answers: [
+                        { text: "La Révocation de l'Édit de Nantes", correct: true },
+                        { text: "La Guerre de Trente Ans", correct: false },
+                        { text: "La Réforme de Calvin", correct: false }
+                    ],
+                    hint: "Cet événement a poussé les protestants français à quitter leur pays. Dans le nom, on y retrouve une grande ville française "
+                },
+                {
+                    question: "Les mouvements religieux ont souvent des symboles. Quel est le symbole du luthéranisme ?",
+                    answers: [
+                        { text: "La croix huguenote", correct: false },
+                        { text: "La rose luthérienne", correct: true },
+                        { text: "La colombe de paix", correct: false }
+                    ],
+                    hint: "C'est un joli symbole en forme de fleur."
+                }
+            ];
+
+            // Index de la question actuelle
+            let currentQuestionIndex = 0;
+            // Score de l'utilisateur
+            let score = 0;
+            // Empêche plusieurs réponses sur une seule question
+            let answered = false;
+
+            const questionContainer = d3.select("#question");
+            const answersContainer = d3.select("#answers");
+            const resultContainer = d3.select("#result");
+            const hintContainer = d3.select("#hint-container");
+            const hintText = d3.select("#hint");
+            const hintButton = d3.select("#hint-btn");
+            const finalScoreContainer = d3.select("#final-score");
+            const finalResultMessageContainer = d3.select("#final-result-message");
+
+            // Fonction pour charger une question
+            function loadQuestion() {
+                // Réinitialiser l'état de réponse pour permettre une nouvelle réponse
+                answered = false; // Permettre un clic pour la nouvelle question
+
+                // Réinitialiser le texte et les styles
+                resultContainer.text(""); // Vide le conteneur de résultats
+                resultContainer.attr("class", ""); // Supprime les classes CSS (correct/incorrect)
+
+                // Supprime les réponses précédentes
+                answersContainer.html(""); // Vide les réponses de la question précédente
+
+                hintText.text(""); // Vide l'indice
+                hintContainer.style("display", "block"); // Affiche le conteneur d'indice
+                finalScoreContainer.text(""); // Vide le score final
+                finalResultMessageContainer.text(""); // Vide le message final
+
+                const currentQuestion = quizData[currentQuestionIndex];
+                questionContainer.text(currentQuestion.question);
+
+                hintButton.on("click", function () {
+                    hintText.text(currentQuestion.hint);
+                });
+
+                answersContainer.selectAll(".answer-container")
+                    .data(currentQuestion.answers)
+                    .enter()
+                    .append("div")
+                    .attr("class", "answer-container")
+                    .text(d => d.text)
+                    .on("click", function (event, d) {
+                        // Bloquer les clics supplémentaires si l'utilisateur a déjà répondu
+                        if (answered) return;
+
+                        answered = true; // Marquer comme répondu pour bloquer d'autres clics
+
+                        if (d.correct) {
+                            // Réponse correcte
+                            score++;
+                            resultContainer.text("Correct !");
+                            resultContainer.attr("class", "correct"); // Ajoute la classe CSS pour le style correct
+                        } else {
+                            // Réponse incorrecte avec la bonne réponse affichée
+                            const correctAnswer = currentQuestion.answers.find(a => a.correct).text;
+                            resultContainer.text(`Incorrect ! La bonne réponse est : ${correctAnswer}`);
+                            resultContainer.attr("class", "incorrect"); // Ajoute la classe CSS pour le style incorrect
+                        }
+
+                        setTimeout(() => {
+                            currentQuestionIndex++;
+                            if (currentQuestionIndex < quizData.length) {
+                                loadQuestion(); // Passe à la question suivante
+                            } else {
+                                displayFinalScore(); // Affiche le score final
+                            }
+                        }, 2000); // Délai avant de passer à la question suivante
+                    });
+            }
+
+
+
+            // Fonction pour afficher le score final après la fin du quiz
+            function displayFinalScore() {
+                // Mise à jour du titre pour indiquer que le quiz est terminé
+                questionContainer.text("Quiz terminé !");
+                // Nettoyer le conteneur des réponses et masquer l'indice
+                answersContainer.html("");
+                hintContainer.style("display", "none"); 
+                resultContainer.text("");
+                // Affiche le score final de l'utilisateur
+                finalScoreContainer.text(`Votre score est de ${score} / ${quizData.length}`);
+
+                // Supprimer le bouton "Demander un indice"
+                const hintButtonElement = document.getElementById("hint-btn");
+                if (hintButtonElement) {
+                    hintButtonElement.remove(); // Supprime l'élément du DOM
+                }
+
+                // Création du conteneur principal pour le message de bravo ou échec
+                const finalContainer = document.createElement('div');
+                finalContainer.style.position = 'fixed';
+                finalContainer.style.top = '70%';
+                finalContainer.style.left = '50%';
+                finalContainer.style.transform = 'translate(-50%, -50%)';
+                finalContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                finalContainer.style.border = '2px solid #0073e6';
+                finalContainer.style.borderRadius = '10px';
+                finalContainer.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.3)';
+                finalContainer.style.padding = '20px';
+                finalContainer.style.textAlign = 'center';
+                finalContainer.style.zIndex = '1000';
+
+                // Message final
+                const finalMessage = document.createElement('h2');
+                finalMessage.style.fontSize = '24px';
+                finalMessage.style.marginBottom = '20px';
+
+                // Bouton d'action (Revenir à l'accueil ou Recommencer)
+                const actionButton = document.createElement('button');
+                actionButton.style.fontSize = '18px';
+                actionButton.style.padding = '10px 20px';
+                actionButton.style.border = 'none';
+                actionButton.style.borderRadius = '5px';
+                actionButton.style.cursor = 'pointer';
+                actionButton.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.2)';
+
+                if (score >= 7) {
+                    // Succès
+                    finalMessage.textContent = "Bravo ! Le résultat est suffisant, vous avez gagné.";
+                    finalMessage.style.color = '#28a745';
+
+                    actionButton.textContent = 'Revenir à l\'accueil';
+                    actionButton.style.backgroundColor = 'rgba(76, 175, 80, 0.9)'; // Vert légèrement transparent
+                    actionButton.style.color = '#ffffff';
+
+                    actionButton.addEventListener('click', () => {
+                        window.location.href = 'index.html';
+                    });
+
+                    // Enregistrement des données en localStorage
+                    localStorage.setItem('lutherianQuizCompleted', 'true');
+                } else {
+                    // Échec
+                    finalMessage.textContent = "Le résultat n'est pas suffisant, veuillez recommencer.";
+                    finalMessage.style.color = '#dc3545';
+
+                    actionButton.textContent = 'Recommencez';
+                    actionButton.style.backgroundColor = 'rgba(220, 53, 69, 0.9)'; // Rouge légèrement transparent
+                    actionButton.style.color = '#ffffff';
+
+                    actionButton.addEventListener('click', () => {
+                        location.reload();
+                    });
+                }
+
+                // Ajouter le message et le bouton au conteneur
+                finalContainer.appendChild(finalMessage);
+                finalContainer.appendChild(actionButton);
+
+                // Ajouter le conteneur au body
+                document.body.appendChild(finalContainer);
+            }
+
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>
