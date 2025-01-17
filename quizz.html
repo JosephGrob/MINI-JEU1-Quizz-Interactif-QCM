@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz en D3.js</title>
+    <style>
+        /* Styles de base pour le corps */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            padding: 5vh; 
+            margin: 0;
+        }
+    
+        /* Style du titre principal */
+        h1 {
+            color: #0073e6;
+            font-size: 2.5vw; 
+            margin-bottom: 3vh; 
+        }
+    
+        /* Conteneur du quiz */
+        .quiz-container {
+            width: 40%; 
+            margin: 0 auto;
+            padding: 3vh; 
+            background-color: #e6f7ff;
+            border: 0.3vw solid #0073e6;
+            border-radius: 1vw; 
+            box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1); 
+        }
+    
+        /* Style des questions */
+        h2 {
+            color: #090909;
+            font-size: 1.5vw; 
+        }
+    
+        /* Style des réponses */
+        .answer {
+            padding: 2vh; 
+            margin: 1vh 0; 
+            cursor: pointer;
+            border-radius: 1vw; 
+            transition: background-color 0.3s ease;
+            font-size: 1.5vw;
+        }
+    
+        /* Effet au survol des réponses */
+        .answer:hover {
+            background-color: #d0e7ff;
+        }
+    
+        /* Style des réponses correctes */
+        .correct {
+            background-color: #d4edda;
+            border: 0.2vw solid #28a745; 
+            color: #155724;
+        }
+    
+        /* Style des réponses incorrectes */
+        .incorrect {
+            background-color: #f8d7da;
+            border: 0.2vw solid #dc3545; 
+            color: #721c24;
+        }
+    
+        /* Conteneur des résultats */
+        #result {
+            font-size: 2vw; 
+            font-weight: bold;
+            margin-top: 1vh;
+            border: none;
+        }
+    
+        /* Style du score final */
+        #final-score {
+            font-size: 1.5vw; 
+            font-weight: bold;
+            margin-top: 3vh;
+            color: #0d0d0e;
+        }
+    
+        /* Message de résultat final */
+        #final-result-message {
+            font-size: 1.5vw; 
+            font-weight: bold;
+            margin-top: 2vh;
+            color: #0073e6;
+        }
+    
+        /* Conteneur pour les indices */
+        #hint-container {
+            margin-top: 2vh; 
+        }
+    
+        /* Bouton pour demander un indice */
+        #hint-btn {
+            padding: 1.5vh 2vw; 
+            font-size: 1.2vw; 
+            background-color: #0073e6;
+            color: white;
+            border: none;
+            border-radius: 0.5vw; 
+            cursor: pointer;
+        }
+    
+        #hint-btn:hover {
+            background-color: #005bb5;
+        }
+    
+        /* Texte de l'indice */
+        #hint {
+            font-size: 1.2vw;
+            font-style: italic;
+            color: #005bb5;
+            margin-top: 1vh;
+        }
+    
+        /* Styles pour le bouton de fermeture de la page */
+        #close-btn {
+            position: absolute;
+            top: 0vh; 
+            left: 0vw; 
+            font-size: 2vw; 
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #f9f9f9;
+            padding: 1vw; 
+            border-radius: 50%;
+            border: 0.2vw solid black;
+        }
+    
+        #close-btn:hover {
+            color: white;
+            background-color: red;
+        }
+    
+        /* Conteneurs pour les images décoratives  */
+        .image-container {
+            position: absolute;
+            top: 18vh; 
+            width: 20vw; 
+        }
+    
+        .left-image {
+            left: 5vw; 
+        }
+    
+        .right-image {
+            right: 5vw; 
+        }
+    
+        /* Style des images */
+        .image-container img {
+            max-width: 100%; 
+            border: 0.2vw solid #ccc; 
+            border-radius: 1vw; 
+            box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1); 
+        }
+    
+        /* Style du conteneur des réponses */
+        .answer-container {
+            border: 0.2vw solid #ccc; 
+            border-radius: 1vw; 
+            padding: 2vh; 
+            margin: 1vh 0; 
+            cursor: pointer; 
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+    
+        /* Style des réponses au survol */
+        .answer-container:hover {
+            background-color: #f0f8ff;
+            border-color: #0073e6;
+        }
+    
+        /* Messages de résultat correct pour chaque question */
+        #result.correct {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 1vh;
+            border-radius: 1vw;
+            font-size: 1.5vw; 
+            display: inline-block;
+        }
+    
+        /* Message de résultat incorrect pour chaque question */
+        #result.incorrect {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 1vh;
+            border-radius: 1vw;
+            font-size: 1.5vw; 
+            display: inline-block;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Bouton de fermeture vers l'accueil -->
+    <a href="index.html" id="close-btn">&#10006;</a>
+
+    <!-- Titre du quizz-->
+    <h1 style="font-size: 28px; color: #003366; font-weight: bold; margin-top: 0px; margin-top: 0px; margin-left: 0px;">
+        Les Mystères du Musée Archéologique sous la Cathédrale Saint-Pierre
+    </h1>
+    <!-- Sous-titre : consigne -->
+    <h2 style="font-size: 18px; color: #555555; font-weight: normal; margin-top: 10px;">
+        Cliquez sur la bonne réponse pour résoudre ce quizz, vous découvrirez les secrets enfouis sous la Cathédrale et comment nous y retrouvons des traces historiques de la Réformes.
+      </h2>
+
+      <!-- Images autours du quiz -->
+    <div class="image-container left-image">
+        <img src="https://www.geneve.com/fileadmin/_processed_/1/0/csm_30160_56330_v0-Archeo-2_1280x960_7222c555cd.webp" alt="Vue archéologique 1">
+    </div>
+    <div class="image-container right-image">
+        <img src="https://nuitdesmusees-geneve.ch/wp-content/uploads/2023/03/SiteArcheo_NAK_5574-5-scaled.jpg" alt="Vue archéologique 2">
+    </div>
+
+    <!-- Conteneur du quiz avec dedans : question, réponses, résultats du quizz et indices -->
+    <div class="quiz-container">
+        <h2 id="question">Loading question...</h2>
+        <div id="answers"></div>
+        <div id="result"></div>
+        <div id="hint-container">
+            <button id="hint-btn">Demander un indice</button>
+            <div id="hint"></div>
+        </div>
+        <div id="final-score"></div>
+        <div id="final-result-message"></div>
+    </div>
+
+    <!-- D3.js bibliothèque pour le script-->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        
+        // Exécution du script une fois que le DOM est complètement chargé
+        document.addEventListener('DOMContentLoaded', function () {
+            // Données du quiz contenant les questions, réponses et indices
+            const quizData = [
+                {
+                    question: "Sous la Cathédrale Saint-Pierre, on a trouvé des restes très anciens qui racontent l’histoire de Genève. Ces vestiges montrent comment la ville a changé avec la Réforme protestante. Que montrent-ils exactement ?",
+                    answers: [
+                        
+                        { text: "Les vestiges des objets liturgiques utilisés lors des cultes protestants.", correct: false },
+                        { text: "Les écrits de Jean Calvin retrouvés dans le site archéologique.", correct: false },
+                        { text: "Les traces de l'ancienne église catholique détruite lors de la Réforme.", correct: true }
+                    ],
+                    hint: "Ces vestiges sont un lieu qui a disparu lors de la Réforme et par l’introduction des pratiques protestantes à Genève."
+                },
+                {
+                    question: "En faisant des travaux sur la Cathédrale Saint-Pierre, les ouvriers ont découvert des trésors enfouis sous le sol. Savez-vous pourquoi ils faisaient ces travaux ?",
+                    answers: [
+                        { text: "Des travaux de rénovation", correct: true },
+                        { text: "Des fouilles archéologiques d'urgence", correct: false },
+                        { text: "La construction d'une route", correct: false }
+                    ],
+                    hint: "Ces fouilles ont commencé en rénovant un bâtiment historique."
+                },
+                {
+                    question: "Les découvertes sous la Cathédrale montrent que Genève a changé ses pratiques religieuses avec la Réforme. Qu'est-ce que ces vestiges racontent ?",
+                    answers: [
+                        { text: "Ils présentent les pratiques médiévales.", correct: false },
+                        { text: "Ils montrent la transition entre les pratiques catholiques et protestantes.", correct: true },
+                        { text: "Ils montrent la vie quotidienne des moines", correct: false }
+                    ],
+                    hint: "La Réforme a marqué une transition dans les pratiques religieuses à Genève."
+                },
+                {
+                    question: "Sous la Cathédrale, on a trouvé des objets qui datent d’une époque très ancienne, bien avant les chevaliers ou les cathédrales. De quelle époque viennent-ils ?",
+                    answers: [
+                        { text: "Époque romaine", correct: true },
+                        { text: "Renaissance", correct: false },
+                        { text: "Moyen Âge", correct: false }
+                    ],
+                    hint: "Pensez à une période avant le Moyen Âge, marquée par des empereurs."
+                },
+                {
+                    question: "Sous la Cathédrale, les archéologues ont trouvé un endroit où les premiers chrétiens faisaient une cérémonie religieuse. Quel était cet endroit ?",
+                    answers: [
+                        { text: "Une ancienne école", correct: false },
+                        { text: "Un lieu pour baptiser les gens", correct: true },
+                        { text: "Une arène", correct: false }
+                    ],
+                    hint: "C’est un espace sacré utilisé pour des cérémonies chrétiennes importantes."
+                },
+                {
+                    question: "Les fouilles ont permis de trouver les restes d’un ancien bâtiment sous la Cathédrale. Quel était ce bâtiment ?",
+                    answers: [
+                        { text: "Un temple romain", correct: false },
+                        { text: "Une grande tour", correct: false },
+                        { text: "Des restes d'une église ancienne", correct: true }
+                    ],
+                    hint: "C’est une structure liée à la religion chrétienne."
+                },
+                {
+                    question: "Les archéologues ont trouvé un sol magnifique sous la Cathédrale. Ce sol montre l’habileté des artisans et du travail de la pierre de l’époque. De quoi était-il fait ?",
+                    answers: [
+                        { text: "Un sol en mosaïque", correct: true },
+                        { text: "Un sol en marbre", correct: false },
+                        { text: "Un sol en bois", correct: false }
+                    ],
+                    hint: "C’est un sol constitué de petites pierres assemblées."
+                },
+                {
+                    question: "Sous la Cathédrale, on peut voir un élément spécial qui parle des tout premiers habitants de Genève, longtemps avant la Réforme. De quoi s’agit-il ?",
+                    answers: [
+                        { text: "Un ancien atelier de potiers", correct: false },
+                        { text: "La tombe d'un chef allobroge (peuple gaulois de l'Antiquité)", correct: true },
+                        { text: "Une bibliothèque médiévale", correct: false }
+                    ],
+                    hint: "Ce point d'intérêt est lié aux premières populations de Genève (des populations très anciennes), bien avant l’arrivée du christianisme."
+                },
+                {
+                    question: "Aujourd’hui, les visiteurs peuvent explorer les sous-sols de la Cathédrale pour une raison précise. Pourquoi les gens viennent-ils voir ce site ?",
+                    answers: [
+                        { text: "Un musée archéologique", correct: true },
+                        { text: "Un lieu de culte", correct: false },
+                        { text: "Un espace de conférences", correct: false }
+                    ],
+                    hint: "Il est utilisé pour exposer les découvertes archéologiques."
+                },
+                {
+                    question: "En explorant les sous-sols de la Cathédrale, les visiteurs apprennent beaucoup de choses. Que peuvent-ils découvrir ?",
+                    answers: [
+                        { text: "L'histoire de Genève à travers les époques", correct: true },
+                        { text: "L'histoire des réformes religieuses dans le monde", correct: false },
+                        { text: "Les traditions culinaires de la région", correct: false }
+                    ],
+                    hint: "Les visiteurs découvrent comment Genève a évolué au fil des siècles."
+                }
+            ];
+
+            // Variables pour suivre l'état du quiz
+            let currentQuestionIndex = 0; // Index de la question actuelle
+            let score = 0; // Score actuel
+            let answered = false; // Statut pour vérifier si une réponse a été donnée
+
+            // Sélection des éléments HTML à manipuler via D3.js
+            const questionContainer = d3.select("#question");
+            const answersContainer = d3.select("#answers");
+            const resultContainer = d3.select("#result");
+            const hintContainer = d3.select("#hint-container");
+            const hintText = d3.select("#hint");
+            const hintButton = d3.select("#hint-btn");
+            const finalScoreContainer = d3.select("#final-score");
+            const finalResultMessageContainer = d3.select("#final-result-message");
+
+            // Fonction pour charger une nouvelle question
+            function loadQuestion() {
+                // Réinitialiser l'état de réponse
+                answered = false; // Permettre un clic pour la nouvelle question
+
+                // Réinitialiser le texte et les styles
+                resultContainer.text(""); // Vide le conteneur de résultats
+                resultContainer.attr("class", ""); // Supprime les classes CSS (correct/incorrect)
+
+                // Supprime les réponses précédentes
+                answersContainer.html(""); // Vide les réponses de la question précédente
+
+                hintText.text(""); // Vide l'indice
+                hintContainer.style("display", "block"); // Affiche le conteneur d'indice
+                finalScoreContainer.text(""); // Vide le score final
+                finalResultMessageContainer.text(""); // Vide le message final
+
+                // Récupérer les données de la question actuelle
+                const currentQuestion = quizData[currentQuestionIndex];
+                questionContainer.text(currentQuestion.question);
+
+                // Configure le bouton pour afficher un indice
+                hintButton.on("click", function () {
+                    hintText.text(currentQuestion.hint);
+                });
+
+                // Afficher les réponses dans le conteneur
+                answersContainer.selectAll(".answer-container")
+                    .data(currentQuestion.answers)
+                    .enter()
+                    .append("div")
+                    .attr("class", "answer-container")
+                    .text(d => d.text)
+                    .on("click", function (event, d) {
+                        // Bloquer les clics supplémentaires si l'utilisateur a déjà répondu
+                        if (answered) return;
+                        // Marquer comme répondu pour bloquer d'autres clics
+                        answered = true; 
+                        // Vérifie si la réponse est correcte ou non
+                        if (d.correct) {
+                            // Réponse correcte
+                            score++;
+                            resultContainer.text("Correct !");
+                            resultContainer.attr("class", "correct"); // Ajoute la classe CSS pour le style correct
+                        } else {
+                            // Réponse incorrecte avec la bonne réponse affichée
+                            const correctAnswer = currentQuestion.answers.find(a => a.correct).text;
+                            resultContainer.text(`Incorrect ! La bonne réponse est : ${correctAnswer}`);
+                            resultContainer.attr("class", "incorrect"); // Ajoute la classe CSS pour le style incorrect
+                        }
+
+                        setTimeout(() => {
+                            currentQuestionIndex++;
+                            if (currentQuestionIndex < quizData.length) {
+                                loadQuestion(); // Passe à la question suivante
+                            } else {
+                                displayFinalScore(); // Affiche le score final
+                            }
+                        }, 2000); // Délai avant de passer à la question suivante
+                    });
+            }
+
+            // Fonction pour afficher le score final
+            function displayFinalScore() {
+                questionContainer.text("Quiz terminé !");
+                answersContainer.html("");
+                hintContainer.style("display", "none");
+                resultContainer.text("");
+
+                // Affiche le score final
+                finalScoreContainer.text(`Votre score est de ${score} / ${quizData.length}`);
+
+                // Création du conteneur principal pour le message de bravo ou échec
+                const finalContainer = document.createElement('div');
+                finalContainer.style.position = 'fixed';
+                finalContainer.style.top = '70%';
+                finalContainer.style.left = '50%';
+                finalContainer.style.transform = 'translate(-50%, -50%)';
+                finalContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                finalContainer.style.border = '2px solid #0073e6';
+                finalContainer.style.borderRadius = '10px';
+                finalContainer.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.3)';
+                finalContainer.style.padding = '20px';
+                finalContainer.style.textAlign = 'center';
+                finalContainer.style.zIndex = '1000';
+
+                // Message final
+                const finalMessage = document.createElement('h2');
+                finalMessage.style.fontSize = '24px';
+                finalMessage.style.marginBottom = '20px';
+
+                // Bouton d'action (Revenir à l'accueil ou Recommencer)
+                const actionButton = document.createElement('button');
+                actionButton.style.fontSize = '18px';
+                actionButton.style.padding = '10px 20px';
+                actionButton.style.border = 'none';
+                actionButton.style.borderRadius = '5px';
+                actionButton.style.cursor = 'pointer';
+                actionButton.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.2)';
+
+                if (score >= 7) {
+                    // Succès
+                    finalMessage.textContent = "Bravo ! Le résultat est suffisant, vous avez gagné.";
+                    finalMessage.style.color = '#28a745';
+
+                    actionButton.textContent = 'Revenir à l\'accueil';
+                    actionButton.style.backgroundColor = 'rgba(76, 175, 80, 0.9)';
+                    actionButton.style.color = '#ffffff';
+
+                    actionButton.addEventListener('click', () => {
+                        window.location.href = 'index.html';
+                    });
+
+                    // Enregistrement des données en localStorage
+                    localStorage.setItem('quizCompleted', 'true');
+                
+                } else {
+                    // Échec
+                    finalMessage.textContent = "Le résultat n'est pas suffisant, veuillez recommencer.";
+                    finalMessage.style.color = '#dc3545';
+
+                    actionButton.textContent = 'Recommencez';
+                    actionButton.style.backgroundColor = 'rgba(220, 53, 69, 0.9)'; 
+                    actionButton.style.color = '#ffffff';
+
+                    actionButton.addEventListener('click', () => {
+                        location.reload();
+                    });
+                }
+
+                // Ajouter le message et le bouton au conteneur
+                finalContainer.appendChild(finalMessage);
+                finalContainer.appendChild(actionButton);
+
+                // Ajouter le conteneur au body
+                document.body.appendChild(finalContainer);
+            }
+
+
+            // Charge la première question au démarrage
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>
+

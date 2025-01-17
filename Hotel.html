@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz sur l'Hôtel de Ville de Genève</title>
+    <style>
+        /* Styles généraux pour la page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            padding-top: 5vh;
+            margin: 0;
+        }
+        /* style pour le titre du quiz */
+        h1 {
+            color: #0073e6;
+            font-size: 3vw; 
+            margin-top: 20px;
+            margin-bottom: 2vh; 
+        }
+    
+        /* conteneur avec le quiz */
+        .quiz-container {
+            width: 40%; 
+            margin: 5vh auto; 
+            padding: 3vh; 
+            background-color: #e6f7ff;
+            border: 0.3vw solid #ad00e6;
+            border-radius: 1vw; 
+            box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1); 
+        }
+    
+         /* Styles pour le sous-titre */
+        h2 {
+            color: #090909;
+            font-size: 1.5vw; 
+        }
+         /* Styles pour les réponses */
+        .answer {
+            padding: 1.5vh; 
+            margin: 1vh 0;
+            cursor: pointer;
+            border-radius: 1vw; 
+            transition: background-color 0.3s ease;
+            font-size: 1.8vw; 
+        }
+    
+        /* Effet au survol d'une réponse */
+        .answer:hover {
+            background-color: #d0e7ff;
+        }
+    
+
+        /* Styles pour les messages de résultats positifs */
+        .correct {
+            background-color: #d4edda;
+            border: 0.2vw solid #28a745; 
+            color: #155724;
+        }
+    
+        /* Styles pour les messages de résultats négatifs  */
+        .incorrect {
+            background-color: #f8d7da;
+            border: 0.2vw solid #dc3545; 
+            color: #721c24;
+        }
+    
+        /* Styles de la zone d'affichage des résultats */
+        #result {
+            font-size: 2vw; 
+            font-weight: bold;
+            margin-top: 0px;
+            border: none;
+        }
+    
+        /* Style pour le score final */
+        #final-score {
+            font-size: 2vw; 
+            font-weight: bold;
+            margin-top: 3vh;
+            color: #0c0c0c;
+        }
+    
+        /* Message "Bravo" en cas de succès */
+        #bravo-message {
+            font-size: 4vw; 
+            font-weight: bold;
+            margin-top: 2vh;
+            color: #28a745;
+        }
+    
+
+        /* Style pour le message des résultats finaux */
+        #final-result-message {
+            font-size: 3vw; 
+            font-weight: bold;
+            margin-top: 2vh;
+            color: #050505;
+        }
+    
+        /* Styles pour la croix de fermeture de la page */
+        #close-btn {
+            position: absolute;
+            top: 0vh; 
+            left: 0vw;
+            font-size: 2vw; 
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #f9f9f9;
+            padding: 1vw; 
+            border-radius: 50%;
+            border: 0.2vw solid black;
+        }
+    
+        #close-btn:hover {
+            color: white;
+            background-color: red;
+        }
+    
+       /* Styles pour le conteneur pour le bouton d'indices */
+        #hint-container {
+            margin-top: 2vh; 
+        }
+    
+        /* Styles pour le bouton d'indices */
+        #hint-btn {
+            padding: 1.5vh 3vw; 
+            font-size: 1.2vw; 
+            background-color: #0073e6;
+            color: white;
+            border: none;
+            border-radius: 0.5vw; 
+            cursor: pointer;
+        }
+    
+        #hint-btn:hover {
+            background-color: #005bb5; /* Sombre au survol */
+        }
+    
+        /* Texte de l'indice */
+        #hint {
+            font-size: 1.2vw; 
+            font-style: italic;
+            color: #005bb5;
+            margin-top: 1vh;
+        }
+   
+         /* Conteneur des réponses */
+        .image-container {
+            position: absolute;
+            top: 20vh; 
+            width: 20vw; 
+        }
+    
+         /* Positionnement de l'image de gauche */
+        .left-image {
+            left: 5vw; 
+        }
+    
+        /* Positionnement de l'image de droite*/
+        .right-image {
+            right: 5vw; 
+        }
+    
+        /* Style pour le conteneur des images */
+        .image-container img {
+            max-width: 100%; 
+            border: 0.2vw solid #ccc; 
+            border-radius: 1vw; 
+            box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1); 
+        }
+    
+        /* Style du conteneur des réponses possibles*/
+        .answer-container {
+            border: 0.2vw solid #ccc; 
+            border-radius: 1vw; 
+            padding: 2vh; 
+            margin: 1vh 0; 
+            cursor: pointer; 
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+    
+        .answer-container:hover {
+            background-color: #f0f8ff; /* Fond bleu clair */
+            border-color: #0073e6; /* Bordure bleue au survol */
+        }
+    
+        /* Messages de résultat positif */
+        #result.correct {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 0.5vh; 
+            border-radius: 0.5vw; 
+            font-size: 1.5vw; 
+            display: inline-block;
+        }
+
+        /* Messages de résultat négatif */
+        #result.incorrect {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 0.5vh; 
+            border-radius: 0.5vw; 
+            font-size: 1.5vw; 
+            display: inline-block;
+        }
+
+    
+    </style>
+    
+</head>
+<body>
+    <!-- Bouton pour revenir à la page principale, index.html -->
+    <a href="index.html" id="close-btn">&#10006;</a>
+
+    <!-- Titre principale -->
+    <h1 style="font-size: 28px; color: #003366; font-weight: bold; margin-top: 0px; margin-top: 0px; margin-left: 0px;">
+        L'Hôtel de Ville : Siège des Décisions qui ont Façonné la Réforme à Genève</h1>
+    <!-- Sous-titre -->
+    <h2 style="font-size: 18px; color: #555555; font-weight: normal; margin-top: 10px;">
+        Testez vos connaissances sur ce lieu emblématique en cliquant sur la bonne réponse et découvrez son rôle clé durant la Réforme.
+    </h2>
+    <!-- Les images décoratives -->
+    <div class="image-container left-image">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhqPZosLgNfWRK0jr9mc0PIPpSIRSaSPBwfROgu19xq1TA0uEcxtsbFcje8X7pUUchBVMmJ97Y3e4crkWKYjqyJiyahL_SqIH6USIBshOYXKRtAZgmFXtDuwl68hsofpYjdBgq-4ZaUDHHRuRgRlVOX1wV4916dVDpq7kCEi0FFhgOLdUVxDGxrZjifhbE/s2048/hotel-de-ville-de-geneve-suisse-0.JPG" alt="Hôtel de Ville Image 1">
+    </div>
+    <div class="image-container right-image">
+        <img src="https://www.plr-ge.ch/fileadmin/_processed_/8/f/csm_img_plr_1_9f3e308dec.png" alt="Hôtel de Ville Image 2">
+    </div>
+    <!-- Conteneur principal pour le quiz : questions, réponses, résultats, indices et les scores pour chaque question et scores finaux -->
+    <div class="quiz-container">
+        <h2 id="question">Loading question...</h2>
+        <div id="answers"></div>
+        <div id="result"></div>
+        <div id="hint-container">
+            <button id="hint-btn">Demander un indice</button>
+            <div id="hint"></div>
+        </div>
+        <div id="final-score"></div>
+        <div id="bravo-message"></div>
+        <div id="final-result-message"></div>
+    </div>
+
+    <!-- integration de la bibliothèque D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Données pour le quiz : chaque question avec ses réponses et indices
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizData = [
+                {
+                    question: "L’Hôtel de Ville à Genève est un endroit très ancien (datant d'avant la Réforme) où on prend encore des décisions politiques importantes. À quelle époque a-t-il été construit ?",
+                    answers: [
+                        { text: "1455", correct: true },
+                        { text: "1750", correct: false },
+                        { text: "1900", correct: false }
+                    ],
+                    hint: "C'était à la fin du Moyen Âge, une époque où les villes commençaient à s’organiser avec leurs propres bâtiments officiels."
+                },
+                {
+                    question: "Au XVIe siècle, l’Hôtel de Ville a commencé à garder des éléments très importants pour l'histoire de Genève et la Réforme. Quelles étaient ces éléments ?",
+                    answers: [
+                        { text: "Les archives de la ville.", correct: true },
+                        { text: "Des coffres remplis d’or.", correct: false },
+                        { text: "Un stock de nourriture pour l’hiver.", correct: false }
+                    ],
+                    hint: "Ces archives contiennent des documents précieux qui racontent l’histoire de la ville."
+                },
+                {
+                    question: "Pendant la Réforme, un moment clé de l’histoire religieuse et politique, que faisait-on à l’Hôtel de Ville ?",
+                    answers: [
+                        { text: "On décidait des lois et des grandes actions pour la ville.", correct: true },
+                        { text: "On organisait des fêtes pour les habitants.", correct: false },
+                        { text: "On fabriquait des objets religieux.", correct: false }
+                    ],
+                    hint: "L’Hôtel de Ville était un endroit où les conseillers discutaient des décisions importantes pour Genève."
+                },
+                {
+                    question: "Dans l’Hôtel de Ville, les dirigeants de Genève avaient une pièce spéciale pour parler des décisions importantes pendant la Réforme. Comment s’appelait-elle ?",
+                    answers: [
+                        { text: "La salle des repas des Septante .", correct: false },
+                        {text: "La salle du Conseil des Cinquante.", correct: true },
+                        { text: "La salle de jeux des dix.", correct: false }
+                    ],
+                    hint: "C’était une pièce où les dirigeants se réunissaient pour discuter des lois et de l’avenir de Genève."
+                },
+                {
+                    question: "L’Hôtel de Ville a beaucoup changé au fil des années. Quel ajout spécial, simplifiant le déplacement des gens, peut-on y voir aujourd’hui ?",
+                    answers: [
+                        { text: "Une tour avec une rampe en spirale.", correct: true },
+                        { text: "Un toit doré.", correct: false },
+                        { text: "Un balcon géant pour les discours.", correct: false }
+                    ],
+                    hint: "Cet ajout permettait aux cavaliers d’accéder facilement aux étages supérieurs."
+                },
+                {
+                    question: "Quand l’Hôtel de Ville a été construit, les bâtiments étaient conçus pour être beaux et symétriques, avec de grandes fenêtres et des décorations. Quel style correspond à cette époque ?",
+                    answers: [
+                        { text: "Le style de la Renaissance (artistique et élégant)", correct: true },
+                        { text: "Le style moderne, (simple mais pratique)", correct: false },
+                        { text: "Le style gothique, (sombre et mystérieux).", correct: false }
+                    ],
+                    hint: "Ce style est apparu à une époque où les artistes et les architectes cherchaient à rendre les villes plus lumineuses et élégantes, où l'art renaissait"
+                },
+                {
+                    question: "Aujourd’hui, l’Hôtel de Ville est toujours utilisé pour des choses importantes. Quelle est sa fonction principale ?",
+                    answers: [
+                        { text: "Siège du gouvernement.", correct: true },
+                        { text: "Musée d’art.", correct: false },
+                        { text: "Salle de concerts.", correct: false }
+                    ],
+                    hint: "C’est là où les grandes décisions politiques pour Genève sont prises."
+                },
+                {
+                    question: "L’Hôtel de Ville a commencé à accueillir des réunions importantes à une époque marquée par de grands changements religieux à Genève. Quand cela a-t-il commencé ?",
+                    answers: [
+                        { text: "Au 16e siècle.", correct: true },
+                        { text: "Au 10e siècle.", correct: false },
+                        { text: "Au 20e siècle.", correct: false }
+                    ],
+                    hint: "Cette période coïncide avec la Réforme et l’introduction du protestantisme à Genève."
+                },
+                {
+                    question: "Un élément spécial a été ajouté à l’Hôtel de Ville au XVIe siècle pour le rendre plus impressionnant et plus haut. Qu’est-ce que c’est ?",
+                    answers: [
+                        { text: "La tour de la rampe.", correct: true },
+                        { text: "Un grand jardin sur le toit.", correct: false },
+                        { text: "Une statue géante de Calvin.", correct: false }
+                    ],
+                    hint: "Cet ajout est une structure unique visible depuis l’extérieur."
+                }
+            ];
+
+            //variables globales du quizz
+            // Question actuelle
+            let currentQuestionIndex = 0;
+            // Score de l'utilisateur
+            let score = 0;
+            // Statut pour éviter de multiples clics sur une question
+            let answered = false;
+
+            // Sélection des conteneurs avec D3.js
+            const questionContainer = d3.select("#question");
+            const answersContainer = d3.select("#answers");
+            const resultContainer = d3.select("#result");
+            const finalScoreContainer = d3.select("#final-score");
+            const hintText = d3.select("#hint");
+            const finalResultMessageContainer = d3.select("#final-result-message");
+            const hintContainer = d3.select("#hint");
+            const hintButton = d3.select("#hint-btn");
+
+            // Fonction pour charger une question
+            function loadQuestion() {
+                // Réinitialiser l'état de réponse et de son style
+                answered = false; // Permettre un clic pour la nouvelle question
+                resultContainer.text(""); 
+                resultContainer.attr("class", ""); // Supprime les classes CSS (correct/incorrect)
+                answersContainer.html(""); // Vide les réponses de la question précédente
+                hintText.text(""); // Vide l'indice précédent
+                hintContainer.style("display", "block"); // Affiche le conteneur d'indice
+                finalScoreContainer.text(""); // Vide le score final
+                finalResultMessageContainer.text(""); // Vide le message final
+
+                // Affichage de la question actuelle
+                const currentQuestion = quizData[currentQuestionIndex];
+                questionContainer.text(currentQuestion.question);
+
+                // Gestion du bouton pour afficher l'indice
+                hintButton.on("click", function () {
+                    hintText.text(currentQuestion.hint);
+                });
+
+                // Affichage des réponses sous forme de boutons
+                answersContainer.selectAll(".answer-container")
+                    .data(currentQuestion.answers)
+                    .enter()
+                    .append("div")
+                    .attr("class", "answer-container")
+                    .text(d => d.text)
+                    .on("click", function (event, d) {
+                        // Bloquer les clics supplémentaires si l'utilisateur a déjà répondu
+                        if (answered) return;
+
+                        answered = true; // Marquer comme répondu pour bloquer d'autres clics
+
+                        if (d.correct) {
+                            // Réponse correcte
+                            score++;
+                            resultContainer.text("Correct !");
+                            resultContainer.attr("class", "correct"); 
+                        } else {
+                            // Réponse incorrecte avec la bonne réponse affichée
+                            const correctAnswer = currentQuestion.answers.find(a => a.correct).text;
+                            resultContainer.text(`Incorrect ! La bonne réponse est : ${correctAnswer}`);
+                            resultContainer.attr("class", "incorrect"); 
+                        }
+
+                        // Passer à la question suivante ou afficher le résultat final
+                        setTimeout(() => {
+                            currentQuestionIndex++;
+                            if (currentQuestionIndex < quizData.length) {
+                                loadQuestion(); // Passe à la question suivante
+                            } else {
+                                displayFinalScore(); // Affiche le score final
+                            }
+                        }, 2000); // Délai avant de passer à la question suivante
+                    });
+            }
+
+            // Fonction pour afficher le score final
+            function displayFinalScore() {
+                questionContainer.text("Quiz terminé !");
+                answersContainer.html("");
+                hintContainer.style("display", "none"); // Masquer le conteneur d'indice
+                resultContainer.text("");
+
+                finalScoreContainer.text(`Votre score est de ${score} / ${quizData.length}`);
+
+                // Supprimer le bouton "Demander un indice" lors de l'affiche du score final
+                const hintButtonElement = document.getElementById("hint-btn");
+                if (hintButtonElement) {
+                    hintButtonElement.remove(); // Supprime l'élément du DOM
+                }
+
+                // Création du conteneur principal pour le message de bravo ou échec
+                const finalContainer = document.createElement('div');
+                finalContainer.style.position = 'fixed';
+                finalContainer.style.top = '70%';
+                finalContainer.style.left = '50%';
+                finalContainer.style.transform = 'translate(-50%, -50%)';
+                finalContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                finalContainer.style.border = '2px solid #0073e6';
+                finalContainer.style.borderRadius = '10px';
+                finalContainer.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.3)';
+                finalContainer.style.padding = '20px';
+                finalContainer.style.textAlign = 'center';
+                finalContainer.style.zIndex = '1000';
+
+                // Message final
+                const finalMessage = document.createElement('h2');
+                finalMessage.style.fontSize = '24px';
+                finalMessage.style.marginBottom = '20px';
+
+                // Bouton d'action (Revenir à l'accueil ou Recommencer)
+                const actionButton = document.createElement('button');
+                actionButton.style.fontSize = '18px';
+                actionButton.style.padding = '10px 20px';
+                actionButton.style.border = 'none';
+                actionButton.style.borderRadius = '5px';
+                actionButton.style.cursor = 'pointer';
+                actionButton.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.2)';
+
+                if (score >= 7) {
+                    // = Succès, égale ou mieux que 7/10
+                    finalMessage.textContent = "Bravo ! Le résultat est suffisant, vous avez gagné.";
+                    finalMessage.style.color = '#28a745';
+
+                    actionButton.textContent = 'Revenir à l\'accueil';
+                    actionButton.style.backgroundColor = 'rgba(76, 175, 80, 0.9)'; // Vert légèrement transparent
+                    actionButton.style.color = '#ffffff';
+
+                    actionButton.addEventListener('click', () => {
+                        window.location.href = 'index.html';
+                    });
+
+                    // Enregistrement des données en localStorage
+                    localStorage.setItem('hotelDeVilleQuizCompleted', 'true');
+                } else {
+                    // = Échec, inférieur à 7/10
+                    finalMessage.textContent = "Le résultat n'est pas suffisant, veuillez recommencer.";
+                    finalMessage.style.color = '#dc3545';
+
+                    actionButton.textContent = 'Recommencez';
+                    actionButton.style.backgroundColor = 'rgba(220, 53, 69, 0.9)'; // Rouge légèrement transparent
+                    actionButton.style.color = '#ffffff';
+
+                    actionButton.addEventListener('click', () => {
+                        location.reload();
+                    });
+                }
+
+                // Ajouter le message et le bouton au conteneur
+                finalContainer.appendChild(finalMessage);
+                finalContainer.appendChild(actionButton);
+
+                // Ajouter le conteneur au body
+                document.body.appendChild(finalContainer);
+            }
+
+
+
+
+            // Charger la première question
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>
