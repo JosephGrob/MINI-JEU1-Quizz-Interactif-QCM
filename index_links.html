@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle interactif du Mur des Réformateurs à Genève</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <!-- Lien vers les styles externes et bibliothèques -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <style>
+        /* Style de base pour la page */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+    
+        /* Style du titre principal */
+        h1 {
+            margin-top: 2vh;
+        }
+    
+        /* Conteneur SVG pour le jeu interactif */
+        #svg-container {
+            margin-top: 2vh;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: white;
+            width: 42%; 
+            min-width: 600px; 
+            min-height: 750px;
+            overflow: hidden;
+        }
+    
+        /* Style pour les rectangles des questions et réponses */
+        .question-rect, .answer-rect {
+            cursor: pointer;
+        }
+    
+        .question-text, .answer-text {
+            pointer-events: none;
+        }
+    
+        /* Styles pour le bouton pour revenir à la page principale index.html */
+        #close-btn {
+            position: absolute;
+            top: 2vh;
+            left: 2vw;
+            font-size: 2vw; 
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #f9f9f9;
+            padding: 0.5vw;
+            border-radius: 50%;
+            border: 0.2vw solid black;
+        }
+    
+        #close-btn:hover {
+            color: white;
+            background-color: red;
+        }
+    
+        /* Style pour l'image de gauche */
+        #fountain-image {
+            position: absolute;
+            top: 15vh; 
+            left: 5vw; 
+            width: 15vw; 
+            height: auto; 
+            border: 0.2vw solid black;
+            border-radius: 1vw;
+        }
+    
+         /* Style pour l'image de droite */
+        #additional-image {
+            position: absolute;
+            top: 15vh; 
+            right: 5vw; 
+            width: 15vw;
+            height: auto; 
+            border: 0.2vw solid black;
+            border-radius: 1vw;
+        }
+    
+        /* Style pour le titre principal */
+        .title-main {
+            font-size: 2vw; 
+            color: #003366;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 2vh;
+        }
+    
+        /* Style pour le sous-titre */
+        .subtitle {
+            font-size: 1.5vw; 
+            color: #555555;
+            text-align: center;
+            margin-top: 1vh;
+        }
+
+
+        /* Style du conteneur du jeu pour les écrans larges */
+        @media (min-width: 1920px) { 
+            #svg-container {
+                max-width: 600px; 
+                margin: 0 auto; 
+            }
+        }
+
+    
+    </style>
+    
+</head>
+<body>
+    <!-- Bouton retour à la page principale index.html -->
+    <a href="index.html" id="close-btn">&#10006;</a>
+
+    <!-- Image de la fontaine -->
+    <img id="fountain-image" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Fontaine_de_l%27Escalade.JPG/220px-Fontaine_de_l%27Escalade.JPG" alt="Fontaine de l'Escalade">
+   
+    <!-- Deuxième image -->
+    <img id="additional-image" src="https://www.bge-geneve.ch/iconographie/system/files/styles/artwork_carousel_full/private/image/2024-02/vg_p_1975.jpeg.webp" alt="Scène historique">
+
+    <!-- Titre principal -->
+    <div class="title-main">La fontaine de l'Escalade : témoin de la Réforme et de la résistance genevoise</div>
+    <!-- Sous-titre -->
+    <div class="subtitle">Reliez les questions (en bleu) aux bonnes réponses (en vert)</div>
+
+    <!-- Conteneur SVG pour le jeu -->
+    <svg id="svg-container" width="600" height="750"></svg>
+    <script>
+        // Données des questions avec leurs coordonnées initiales pour les positionner sur le conteneur du jeu
+        const questionsData = [
+            { text: "Qui attaque Genève en 1602 ?", x: 50, y: 50 },
+            { text: "Que commémore la fontaine ?", x: 50, y: 125 },
+            { text: "Quelle est la devise de Genève ?", x: 50, y: 200 },
+            { text: "Quel célèbre Réformateur est représenté sur la fontaine ?", x: 50, y: 275 },
+            { text: "Combien de Genevois ont défendu la ville ?", x: 50, y: 350 },
+            { text: "Où se trouve la fontaine ?", x: 50, y: 425 },
+            { text: "Que porte la statue au sommet de la fontaine ?", x: 50, y: 500 },
+        ];
+
+        // Données des réponses avec leurs coordonnées
+        const answersData = [
+            { text: "Le duc de Savoie et son armée", x: 350, y: 125 },
+            { text: "La victoire de 1602", x: 350, y: 50 },
+            { text: "Post Tenebras Lux", x: 350, y: 500 },
+            { text: "Théodore de Bèze", x: 350, y: 275 },
+            { text: "18 soldats", x: 350, y: 425 },
+            { text: "Au bas de la Vieille Ville", x: 350, y: 350 },
+            { text: "Une lance et un bouclier", x: 350, y: 200 },
+        ];
+
+        // Fonction pour mélanger les questions et réponses
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Mélanger les questions et les réponses
+        shuffle(questionsData);
+        shuffle(answersData);
+
+        // Création du conteneur SVG
+        const svg = d3.select("#svg-container");
+
+        // Dimensions du conteneur SVG
+        const containerWidth = 600;
+        const containerHeight = 590;
+        svg.attr("width", containerWidth).attr("height", containerHeight);
+
+        // Dimensions des rectangles (questions et réponses)
+        const rectWidth = 230;
+        const rectHeight = 60;
+
+        // Ajout des rectangles pour les questions
+        svg.selectAll(".question-rect")
+            .data(questionsData)
+            .enter()
+            .append("rect")
+            .attr("class", "question-rect")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("width", rectWidth)
+            .attr("height", rectHeight)
+            .style("fill", "lightblue")
+            .style("stroke", "black")
+            .style("stroke-width", 2);
+
+        // Ajout du texte pour les questions
+        svg.selectAll(".question-text")
+            .data(questionsData)
+            .enter()
+            .append("text")
+            .attr("class", "question-text")
+            .attr("x", d => d.x + rectWidth / 2)
+            .attr("y", d => d.y + rectHeight / 2)
+            .style("font-size", "12px")
+            .style("fill", "black")
+            .each(function(d) {
+                const text = d.text.split(' ');
+                const firstPart = text.slice(0, 5).join(' ');
+                const secondPart = text.slice(5).join(' ');
+                d3.select(this).append("tspan")
+                    .text(firstPart)
+                    .attr("x", d.x + rectWidth / 2)
+                    .attr("dy", "-0.5em")
+                    .attr("text-anchor", "middle");
+                d3.select(this).append("tspan")
+                    .text(secondPart)
+                    .attr("x", d.x + rectWidth / 2)
+                    .attr("dy", "1.2em")
+                    .attr("text-anchor", "middle");
+            });
+
+        // Ajout des rectangles pour les réponses
+        svg.selectAll(".answer-rect")
+            .data(answersData)
+            .enter()
+            .append("rect")
+            .attr("class", "answer-rect")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("width", rectWidth)
+            .attr("height", rectHeight)
+            .style("fill", "lightgreen")
+            .style("stroke", "black")
+            .style("stroke-width", 2);
+
+        // Ajout du texte pour les réponses
+        svg.selectAll(".answer-text")
+            .data(answersData)
+            .enter()
+            .append("text")
+            .attr("class", "answer-text")
+            .attr("x", d => d.x + rectWidth / 2)
+            .attr("y", d => d.y + rectHeight / 2)
+            .text(d => d.text)
+            .attr("text-anchor", "middle")
+            .attr("dy", ".35em")
+            .style("font-size", "12px")
+            .style("fill", "black");
+
+        // Initialisation des données pour les lignes tracées
+        // Coordonnées actuelles de la ligne tracée
+        let lineData = [];
+        const greenLines = [], blueLines = [], redLines = [], purpleLines = [], orangeLines = [], yellowLines = [], cyanLines = []; //pas utilisé !
+        // Liste des connexions validées
+        let validatedConnections = [];
+
+        // Fonction pour dessiner une ligne d'une couleur (ce sera en noir)
+        const drawLineWithColor = (color) => {
+            // Ajoute un chemin SVG pour représenter la ligne
+            let line = svg.append("path")
+                .attr("class", `drawing-line-${color}`)
+                .attr("stroke-width", 2)
+                .attr("fill", "none")
+                .attr("stroke", color);
+
+            // Générateur de chemin avec D3.js pour dessiner des lignes
+            const lineGenerator = d3.line()
+                .x(d => d[0]) //position x
+                .y(d => d[1]) //position y
+                .curve(d3.curveBasis); //courbes lissées
+        
+            // Définit le chemin basé sur les données de ligne
+            line.attr("d", lineGenerator(lineData));
+
+            // Conserve les lignes vertes comme correctes
+            if (color === "green") {
+                line.classed("persist-line", true);
+            }
+        };
+
+
+        // Fonction pour sauvegarder les données des lignes selon leur couleur (couleurs vertes seront sauvegardées)
+        const saveLineData = (color) => {
+            switch (color) {
+                case "green":
+                    greenLines.push([...lineData]);
+            }
+        };
+
+        // Fonction pour obtenir les coordonnées tactiles dans le conteneur SVG
+        const getTouchCoordinates = (event) => {
+            const touch = event.touches[0];
+            const svgRect = svg.node().getBoundingClientRect();
+            const x = touch.clientX - svgRect.left;
+            const y = touch.clientY - svgRect.top;
+            return [x, y];
+        };
+
+        // Vérifie si un point est à l'intérieur d'un rectangle donné   
+        const isPointInsideRect = (point, rect) => {
+            return point[0] >= rect.x && point[0] <= rect.x + rect.width &&
+                point[1] >= rect.y && point[1] <= rect.y + rect.height;
+        };
+
+        // Initialisation des rectangles pour les questions et réponses
+        // Rectangles pour chaque question
+        const rectQ1 = { 
+            x: questionsData.find(d => d.text === "Qui attaque Genève en 1602 ?").x, 
+            y: questionsData.find(d => d.text === "Qui attaque Genève en 1602 ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA1 = { 
+            x: answersData.find(d => d.text === "Le duc de Savoie et son armée").x, 
+            y: answersData.find(d => d.text === "Le duc de Savoie et son armée").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ2 = { 
+            x: questionsData.find(d => d.text === "Que commémore la fontaine ?").x, 
+            y: questionsData.find(d => d.text === "Que commémore la fontaine ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA2 = { 
+            x: answersData.find(d => d.text === "La victoire de 1602").x, 
+            y: answersData.find(d => d.text === "La victoire de 1602").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ3 = { 
+            x: questionsData.find(d => d.text === "Quelle est la devise de Genève ?").x, 
+            y: questionsData.find(d => d.text === "Quelle est la devise de Genève ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA3 = { 
+            x: answersData.find(d => d.text === "Post Tenebras Lux").x, 
+            y: answersData.find(d => d.text === "Post Tenebras Lux").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ4 = { 
+            x: questionsData.find(d => d.text === "Quel célèbre Réformateur est représenté sur la fontaine ?").x, 
+            y: questionsData.find(d => d.text === "Quel célèbre Réformateur est représenté sur la fontaine ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA4 = { 
+            x: answersData.find(d => d.text === "Théodore de Bèze").x, 
+            y: answersData.find(d => d.text === "Théodore de Bèze").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ5 = { 
+            x: questionsData.find(d => d.text === "Combien de Genevois ont défendu la ville ?").x, 
+            y: questionsData.find(d => d.text === "Combien de Genevois ont défendu la ville ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA5 = { 
+            x: answersData.find(d => d.text === "18 soldats").x, 
+            y: answersData.find(d => d.text === "18 soldats").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ6 = { 
+            x: questionsData.find(d => d.text === "Où se trouve la fontaine ?").x, 
+            y: questionsData.find(d => d.text === "Où se trouve la fontaine ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA6 = { 
+            x: answersData.find(d => d.text === "Au bas de la Vieille Ville").x, 
+            y: answersData.find(d => d.text === "Au bas de la Vieille Ville").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ7 = { 
+            x: questionsData.find(d => d.text === "Que porte la statue au sommet de la fontaine ?").x, 
+            y: questionsData.find(d => d.text === "Que porte la statue au sommet de la fontaine ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA7 = { 
+            x: answersData.find(d => d.text === "Une lance et un bouclier").x, 
+            y: answersData.find(d => d.text === "Une lance et un bouclier").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        // Vérifie si une ligne connecte correctement une question et une réponse
+        const isLineConnectingRects = (startRect, endRect) => {
+            const startPoint = lineData[0];
+            const endPoint = lineData[lineData.length - 1];
+            return (isPointInsideRect(startPoint, startRect) && isPointInsideRect(endPoint, endRect)) || 
+                   (isPointInsideRect(startPoint, endRect) && isPointInsideRect(endPoint, startRect));
+        };
+
+
+        // Dessine une ligne en fonction des connexions valides
+        const drawLineWithColorBasedOnRelations = () => {
+            let isCorrectConnection = false;
+
+            // Vérifie chaque paire question-réponse
+            if (isLineConnectingRects(rectQ1, rectA1)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ1, rectA1);
+            } else if (isLineConnectingRects(rectQ2, rectA2)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ2, rectA2);
+            } else if (isLineConnectingRects(rectQ3, rectA3)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ3, rectA3);
+            } else if (isLineConnectingRects(rectQ4, rectA4)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ4, rectA4);
+            } else if (isLineConnectingRects(rectQ5, rectA5)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ5, rectA5);
+            } else if (isLineConnectingRects(rectQ6, rectA6)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ6, rectA6);
+            } else if (isLineConnectingRects(rectQ7, rectA7)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ7, rectA7);
+            }
+
+            // Dessine une ligne temporaire
+            let line = svg.select(`.drawing-line-temp`);
+            if (line.empty()) {
+                line = svg.append("path")
+                    .attr("class", "drawing-line-temp")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none")
+                    .attr("stroke", "black"); 
+            }
+
+            const lineGenerator = d3.line()
+                .x(d => d[0])
+                .y(d => d[1])
+                .curve(d3.curveBasis);
+
+            line.attr("d", lineGenerator(lineData));
+
+            // Si la connexion est correcte, la ligne devient verte
+            if (isCorrectConnection) {
+                line.attr("stroke", "green") 
+                    .classed("persist-line", true) 
+                    .classed("drawing-line-temp", false);
+            }
+        };
+
+        // Ajoute une connexion validée à la liste (ceci permet d'éviter les doublons)
+        const addValidatedConnection = (question, answer) => {
+            const connectionExists = validatedConnections.some(conn => conn.question === question && conn.answer === answer);
+
+            if (!connectionExists) {
+                validatedConnections.push({ question, answer });
+            }
+        };
+
+
+
+        // Gestion des événements tactiles pour dessiner les lignes
+        // Début d'une interaction tactile (l'utilisateur commence à tracer une ligne)
+        const touchstart = (event) => {
+            event.preventDefault(); // Empêche le comportement par défaut du navigateur pour les événements tactiles
+            lineData = []; // Réinitialise les données de la ligne
+            const [x, y] = getTouchCoordinates(event); // On obtient les coordonnées
+            lineData.push([x, y]); // Ajoute le point de départ aux données de la ligne
+        };
+
+        // Déplacement tactile (l'utilisateur déplace son doigt pour tracer une ligne)
+        const touchmove = (event) => {
+            event.preventDefault();
+            const [x, y] = getTouchCoordinates(event);
+            lineData.push([x, y]);
+            drawLineWithColorBasedOnRelations();
+        };
+
+        // Fin de l'interaction tactile (l'utilisateur lève le doigt ou termine le geste)
+        const touchend = () => {
+            // Premier point tracé (début de la ligne)
+            const startPoint = lineData[0];
+            // Dernier point tracé (fin de la ligne)
+            const endPoint = lineData[lineData.length - 1];
+            // Regroupe tous les rectangles des questions et réponses
+            const allRects = [...questionsData.map(d => ({ x: d.x, y: d.y, width: rectWidth, height: rectHeight })),
+                            ...answersData.map(d => ({ x: d.x, y: d.y, width: rectWidth, height: rectHeight }))];
+
+            // Vérifie si la ligne croise deux rectangles
+            const crossedQuestions = allRects.filter(rect => isPointInsideRect(startPoint, rect) || isPointInsideRect(endPoint, rect));
+
+            // Si la ligne ne connecte pas exactement deux rectangles, elle est supprimée
+            if (crossedQuestions.length !== 2) {
+                svg.selectAll(`.drawing-line-temp`).remove(); 
+                lineData = [];
+                return;
+            }
+
+            drawLineWithColorBasedOnRelations();
+
+            // Supprime les lignes incorrectes temporaires
+            svg.selectAll(`.drawing-line-temp:not(.persist-line)`).remove();
+
+            if (validatedConnections.length === 7) {
+            // Conteneur pour le message de victoire
+            const bravoContainer = svg.append("foreignObject")
+                .attr("x", containerWidth / 2 - 150) 
+                .attr("y", 150) 
+                .attr("width", 300) 
+                .attr("height", 200) 
+                .append("xhtml:div") 
+                .style("background", "white")
+                .style("border", "2px solid green")
+                .style("border-radius", "10px")
+                .style("padding", "20px")
+                .style("text-align", "center")
+                .style("box-shadow", "0px 4px 6px rgba(0, 0, 0, 0.1)")
+                .style("display", "flex")
+                .style("flex-direction", "column")
+                .style("justify-content", "center")
+                .style("align-items", "center");
+
+            // Texte "BRAVO"
+            bravoContainer.append("div")
+                .text("BRAVO !")
+                .style("font-size", "24px")
+                .style("font-weight", "bold")
+                .style("color", "green")
+                .style("margin-bottom", "20px");
+
+            // Bouton pour revenir à la page principale
+            const button = bravoContainer.append("button")
+                .text("Retourner à l'accueil")
+                .style("padding", "15px 25px")
+                .style("font-size", "18px")
+                .style("background-color", "#00bfff")
+                .style("color", "white")
+                .style("border", "none")
+                .style("border-radius", "8px")
+                .style("cursor", "pointer")
+                .style("box-shadow", "0px 4px 6px rgba(0, 0, 0, 0.1)")
+                .style("touch-action", "manipulation") 
+                .style("user-select", "none"); 
+
+            // Ajout de l'événement tactile
+            button.on("click touchstart", function () {
+                window.location.href = "index.html"; 
+            });
+
+            console.log("BRAVO ! Toutes les connexions sont correctes !");
+            // Stocke une indication dans le localStorage pour signaler que le jeu est terminé et réussi
+            localStorage.setItem('escaladeGameCompleted', 'true');
+        }
+
+        };
+
+    // Fonction pour obtenir les coordonnées de la souris dans le conteneur SVG
+    const getMouseCoordinates = (event) => {
+        const svgRect = svg.node().getBoundingClientRect();
+        const x = event.clientX - svgRect.left;
+        const y = event.clientY - svgRect.top;
+        return [x, y];
+    };
+
+    // Gestionnaires pour les événements de la souris
+    let isMouseDown = false;
+
+    // Début d'une interaction souris (clic maintenu pour tracer une ligne)
+    const mousedown = (event) => {
+        isMouseDown = true; // Active le mode dessin
+        lineData = []; // Réinitialise les données de la ligne
+        const [x, y] = getMouseCoordinates(event); // Obtient les coordonnées de départ
+        lineData.push([x, y]); // Ajoute le point de départ à la ligne
+    };
+
+    // Déplacement de la souris (ligne en cours de traçage)
+    const mousemove = (event) => {
+        if (!isMouseDown) return; // Ignore si le bouton de la souris n'est pas maintenu
+        const [x, y] = getMouseCoordinates(event); // Obtient les coordonnées actuelles
+        lineData.push([x, y]); // Ajoute le point aux données de la ligne
+        drawLineWithColorBasedOnRelations(); // Dessine la ligne en fonction des relations
+    };
+
+    // Fin d'une interaction souris (relâchement du clic)
+    const mouseup = () => {
+        if (!isMouseDown) return; // Ignore si l'événement est déclenché sans interaction
+        isMouseDown = false; // Désactive le mode dessin
+        const startPoint = lineData[0]; // Point de départ
+        const endPoint = lineData[lineData.length - 1]; // Point de fin
+
+        // Regroupe tous les rectangles des questions et réponses
+        const allRects = [...questionsData.map(d => ({ x: d.x, y: d.y, width: rectWidth, height: rectHeight })),
+                        ...answersData.map(d => ({ x: d.x, y: d.y, width: rectWidth, height: rectHeight }))];
+
+        // Vérifie si la ligne croise deux rectangles
+        const crossedQuestions = allRects.filter(rect => isPointInsideRect(startPoint, rect) || isPointInsideRect(endPoint, rect));
+
+        // Si la ligne ne connecte pas exactement deux rectangles, elle est supprimée
+        if (crossedQuestions.length !== 2) {
+            svg.selectAll(`.drawing-line-temp`).remove(); // Supprime la ligne temporaire
+            lineData = []; // Réinitialise les données de la ligne
+            return;
+        }
+
+        drawLineWithColorBasedOnRelations(); // Dessine la ligne avec la couleur appropriée
+
+        // Supprime les lignes temporaires incorrectes
+        svg.selectAll(`.drawing-line-temp:not(.persist-line)`).remove();
+
+        // Vérifie si toutes les connexions sont validées
+        if (validatedConnections.length === 7) {
+            // Affiche le message de victoire
+            const bravoContainer = svg.append("foreignObject")
+                .attr("x", containerWidth / 2 - 150)
+                .attr("y", 150)
+                .attr("width", 300)
+                .attr("height", 200)
+                .append("xhtml:div")
+                .style("background", "white")
+                .style("border", "2px solid green")
+                .style("border-radius", "10px")
+                .style("padding", "20px")
+                .style("text-align", "center")
+                .style("box-shadow", "0px 4px 6px rgba(0, 0, 0, 0.1)")
+                .style("display", "flex")
+                .style("flex-direction", "column")
+                .style("justify-content", "center")
+                .style("align-items", "center");
+
+            bravoContainer.append("div")
+                .text("BRAVO !")
+                .style("font-size", "24px")
+                .style("font-weight", "bold")
+                .style("color", "green")
+                .style("margin-bottom", "20px");
+
+            const button = bravoContainer.append("button")
+                .text("Retourner à l'accueil")
+                .style("padding", "15px 25px")
+                .style("font-size", "18px")
+                .style("background-color", "#00bfff")
+                .style("color", "white")
+                .style("border", "none")
+                .style("border-radius", "8px")
+                .style("cursor", "pointer")
+                .style("box-shadow", "0px 4px 6px rgba(0, 0, 0, 0.1)")
+                .on("click", () => {
+                    window.location.href = "index.html";
+                });
+
+            console.log("BRAVO ! Toutes les connexions sont correctes !");
+            localStorage.setItem('escaladeGameCompleted', 'true'); // Enregistre la victoire
+        }
+    };
+
+
+
+
+
+
+
+
+        
+
+    // Ajout des gestionnaires pour les événements souris et tactiles
+    svg.on("mousedown", mousedown)
+        .on("mousemove", mousemove)
+        .on("mouseup", mouseup)
+        .on("mouseleave", mouseup) // Arrête le dessin si la souris quitte le conteneur SVG
+        .on("touchstart", touchstart)
+        .on("touchmove", touchmove)
+        .on("touchend", touchend)
+        .on("touchcancel", touchend);
+    </script>
+</body>
+</html>

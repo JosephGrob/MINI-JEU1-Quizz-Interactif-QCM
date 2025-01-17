@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoire de Calvin</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <!-- bibliothèques JavaScript utilisées -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <style>
+        /* Configuration de base du corps de la page */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #d7eff0;
+            margin: 0;
+            padding: 0;
+        }
+        /* Style pour le titre principal */
+        h1 {
+            margin-top: 2vh;
+        }
+        /* Conteneur principal du SVG */
+        #svg-container {
+            margin-top: 2vh;
+            border: 1px solid #634b4b;
+            border-radius: 8px;
+            background-color: rgb(255, 255, 255);
+            width: 40.5%; 
+            min-width: 600px; 
+            min-height: 750px;
+            overflow: hidden;
+        }
+
+        /* Style des rectangles pour les questions et réponses */
+        .question-rect, .answer-rect {
+            cursor: pointer;
+        }
+    
+        .question-text, .answer-text {
+            pointer-events: none;
+        }
+    
+        /* Styles pour la croix de retour à l'accueil (index.html) */
+        #close-btn {
+            position: absolute;
+            top: 2vh;
+            left: 2vw;
+            font-size: 2vw;
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #f9f9f9;
+            padding: 0.5vw;
+            border-radius: 50%;
+            border: 0.2vw solid black;
+        }
+    
+        #close-btn:hover {
+            color: white;
+            background-color: red;
+        }
+    
+         /* Style des images à gauche et à droite de la page */
+        #auditoire {
+            position: absolute;
+            top: 15vh; 
+            left: 5vw; 
+            width: 15vw; 
+            height: auto;
+            border: 0.2vw solid black;
+            border-radius: 1vw;
+        }
+    
+        #auditoire_photo {
+            position: absolute;
+            top: 15vh; 
+            right: 5vw; 
+            width: 15vw; 
+            height: auto; 
+            border: 0.2vw solid black;
+            border-radius: 1vw;
+        }
+    
+        /* Style pour le titre principal */
+        .title-main {
+            font-size: 2vw; 
+            color: #003366;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 2vh;
+        }
+    
+        /* Style pour le sous-titre */
+        .subtitle {
+            font-size: 1.5vw; 
+            color: #555555;
+            text-align: center;
+            margin-top: 1vh;
+        }
+
+
+    
+    </style>
+    
+</head>
+<body>
+    <!-- Bouton retour -->
+    <a href="index.html" id="close-btn">&#10006;</a>
+
+    <!-- Image de l'auditoire -->
+    <img id="auditoire" src="https://auditoirecalvin.ch/wp-content/uploads/2020/07/Header-Auditoirecalvin-uai-959x1280.jpg" alt="auditoire">
+   
+    <!-- Deuxième image (vieille image de l'auditoire) -->
+    <img id="auditoire_photo" src="https://www.bge-geneve.ch/iconographie/system/files/styles/artwork_carousel_full/private/image/2023-12/jds_01_vgecite_1799.jpeg.webp" alt="auditoire_photo">
+    <!-- Titre principal de la page -->
+    <div class="title-main">L'Auditoire de Calvin et son rôle dans la Réforme protestante</div>
+    <!-- Sous-titre de la page -->
+    <div class="subtitle">Reliez les questions aux bonnes réponses pour découvrir l'importance de l'Auditoire de Calvin durant la Réforme.</div>
+
+    <!-- Conteneur SVG pour le quiz interactif -->
+    <svg id="svg-container" width="600" height="750"></svg>
+    <script>
+        // Mes questions et réponses dans le quizz
+        const questionsData = [
+            { text: "En quelle année l'Auditoire de Calvin a-t-il été transformé en lieu protestant ?", x: 5, y: 200 },
+            { text: "Quel célèbre réformateur a utilisé l'Auditoire pour prêcher sa théologie ?", x: 5, y: 500 },
+            { text: "Quel était le rôle principal de l'Auditoire de Calvin pendant la Réforme ?", x: 5, y: 50 },
+            { text: "Quels réfugiés ont trouvé un asile spirituel à l'Auditoire ?", x: 5, y: 425 },
+            { text: "Dans quel style architectural l'Auditoire de Calvin a-t-il été construit ?", x: 5, y: 350 },
+            { text: "Quelles activités bibliques étaient organisées chaque matin à l'Auditoire ?", x: 5, y: 275 },
+            { text: "Quels vitraux modernes ornent aujourd'hui l'Auditoire de Calvin ?", x: 5, y: 125 },
+        ];
+
+        const answersData = [
+            { text: "1536", x: 365, y: 50 },
+            { text: "Jean Calvin", x: 365, y: 125 },
+            { text: "Lieu de prédication et d'étude biblique", x: 365, y: 200 },
+            { text: "Des réfugiés protestants de toute l'Europe", x: 365, y: 275 },
+            { text: "Style gothique", x: 365, y: 350 },
+            { text: "Études bibliques à 7 heures", x: 365, y: 425 },
+            { text: "Des vitraux modernes rouges et bleus", x: 365, y: 500 },
+        ];
+
+
+        // Fonction pour mélanger les questions et réponses
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Mélange des questions et des réponses
+        shuffle(questionsData);
+        shuffle(answersData);
+
+        // Sélection du conteneur SVG
+        const svg = d3.select("#svg-container");
+
+        // Dimensions du conteneur SVG
+        const containerWidth = 620;
+        const containerHeight = 590;
+        svg.attr("width", containerWidth).attr("height", containerHeight);
+
+        // Dimensions des rectangles représentant les questions et réponses
+        const rectWidth = 250;
+        const rectHeight = 60;
+
+        // Création des rectangles pour les questions
+        svg.selectAll(".question-rect")
+            .data(questionsData)
+            .enter()
+            .append("rect")
+            .attr("class", "question-rect")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("width", rectWidth)
+            .attr("height", rectHeight)
+            .style("fill", "lightblue")
+            .style("stroke", "black")
+            .style("stroke-width", 2);
+
+        // Ajout du texte des questions
+        svg.selectAll(".question-text")
+            .data(questionsData)
+            .enter()
+            .append("text")
+            .attr("class", "question-text")
+            .attr("x", d => d.x + rectWidth / 2)
+            .attr("y", d => d.y + rectHeight / 2)
+            .style("font-size", "12px")
+            .style("fill", "black")
+            .each(function(d) {
+                const text = d.text.split(' ');
+                const firstPart = text.slice(0, 5).join(' ');
+                const secondPart = text.slice(5).join(' ');
+                d3.select(this).append("tspan")
+                    .text(firstPart)
+                    .attr("x", d.x + rectWidth / 2)
+                    .attr("dy", "-0.5em")
+                    .attr("text-anchor", "middle");
+                d3.select(this).append("tspan")
+                    .text(secondPart)
+                    .attr("x", d.x + rectWidth / 2)
+                    .attr("dy", "1.2em")
+                    .attr("text-anchor", "middle");
+            });
+
+        // Création des rectangles pour les réponses
+        svg.selectAll(".answer-rect")
+            .data(answersData)
+            .enter()
+            .append("rect")
+            .attr("class", "answer-rect")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("width", rectWidth)
+            .attr("height", rectHeight)
+            .style("fill", "lightgreen")
+            .style("stroke", "black")
+            .style("stroke-width", 2);
+
+        // Ajout du texte des réponses
+        svg.selectAll(".answer-text")
+            .data(answersData)
+            .enter()
+            .append("text")
+            .attr("class", "answer-text")
+            .attr("x", d => d.x + rectWidth / 2)
+            .attr("y", d => d.y + rectHeight / 2)
+            .text(d => d.text)
+            .attr("text-anchor", "middle")
+            .attr("dy", ".35em")
+            .style("font-size", "12px")
+            .style("fill", "black");
+
+        // Données pour stocker les points de la ligne et les connexions validées
+        let lineData = []; // Contient les coordonnées des points tracés par l'utilisateur
+        const greenLines = [], blueLines = [], redLines = [], purpleLines = [], orangeLines = [], yellowLines = [], cyanLines = [];
+        let validatedConnections = []; // Contient les connexions validées entre questions et réponses
+
+        // Fonction pour dessiner une ligne avec une couleur spécifique
+        const drawLineWithColor = (color) => {
+            let line = svg.append("path")
+                .attr("class", `drawing-line-${color}`)
+                .attr("stroke-width", 2)
+                .attr("fill", "none")
+                .attr("stroke", color);
+
+            // Générateur de lignes courbées
+            const lineGenerator = d3.line()
+                .x(d => d[0])
+                .y(d => d[1])
+                .curve(d3.curveBasis);
+            // Définit le chemin avec les données tracées
+            line.attr("d", lineGenerator(lineData));
+
+            // Marque les lignes vertes comme permanentes
+            if (color === "green") {
+                line.classed("persist-line", true);
+            }
+        };
+
+        // Fonction pour sauvegarder les données de lignes selon la couleur verte
+        const saveLineData = (color) => {
+            switch (color) {
+                case "green":
+                    greenLines.push([...lineData]);
+            }
+        };
+
+        // Fonction pour obtenir les coordonnées d'un point depuis un événement tactile
+        const getTouchCoordinates = (event) => {
+            const touch = event.touches[0];
+            const svgRect = svg.node().getBoundingClientRect();
+            const x = touch.clientX - svgRect.left;
+            const y = touch.clientY - svgRect.top;
+            return [x, y];
+        };
+
+        // Vérifie si un point donné est à l'intérieur d'un rectangle
+        const isPointInsideRect = (point, rect) => {
+            return point[0] >= rect.x && point[0] <= rect.x + rect.width &&
+                point[1] >= rect.y && point[1] <= rect.y + rect.height;
+        };
+
+        // Création des objets pour les rectangles des questions et réponses
+        // Chaque question et réponse est associée à ses coordonnées et dimensions
+        const rectQ1 = { 
+            x: questionsData.find(d => d.text === "En quelle année l'Auditoire de Calvin a-t-il été transformé en lieu protestant ?").x, 
+            y: questionsData.find(d => d.text === "En quelle année l'Auditoire de Calvin a-t-il été transformé en lieu protestant ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA1 = { 
+            x: answersData.find(d => d.text === "1536").x, 
+            y: answersData.find(d => d.text === "1536").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ2 = { 
+            x: questionsData.find(d => d.text === "Quel célèbre réformateur a utilisé l'Auditoire pour prêcher sa théologie ?").x, 
+            y: questionsData.find(d => d.text === "Quel célèbre réformateur a utilisé l'Auditoire pour prêcher sa théologie ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA2 = { 
+            x: answersData.find(d => d.text === "Jean Calvin").x, 
+            y: answersData.find(d => d.text === "Jean Calvin").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ3 = { 
+            x: questionsData.find(d => d.text === "Quel était le rôle principal de l'Auditoire de Calvin pendant la Réforme ?").x, 
+            y: questionsData.find(d => d.text === "Quel était le rôle principal de l'Auditoire de Calvin pendant la Réforme ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA3 = { 
+            x: answersData.find(d => d.text === "Lieu de prédication et d'étude biblique").x, 
+            y: answersData.find(d => d.text === "Lieu de prédication et d'étude biblique").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ4 = { 
+            x: questionsData.find(d => d.text === "Quels réfugiés ont trouvé un asile spirituel à l'Auditoire ?").x, 
+            y: questionsData.find(d => d.text === "Quels réfugiés ont trouvé un asile spirituel à l'Auditoire ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA4 = { 
+            x: answersData.find(d => d.text === "Des réfugiés protestants de toute l'Europe").x, 
+            y: answersData.find(d => d.text === "Des réfugiés protestants de toute l'Europe").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ5 = { 
+            x: questionsData.find(d => d.text === "Dans quel style architectural l'Auditoire de Calvin a-t-il été construit ?").x, 
+            y: questionsData.find(d => d.text === "Dans quel style architectural l'Auditoire de Calvin a-t-il été construit ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA5 = { 
+            x: answersData.find(d => d.text === "Style gothique").x, 
+            y: answersData.find(d => d.text === "Style gothique").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ6 = { 
+            x: questionsData.find(d => d.text === "Quelles activités bibliques étaient organisées chaque matin à l'Auditoire ?").x, 
+            y: questionsData.find(d => d.text === "Quelles activités bibliques étaient organisées chaque matin à l'Auditoire ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA6 = { 
+            x: answersData.find(d => d.text === "Études bibliques à 7 heures").x, 
+            y: answersData.find(d => d.text === "Études bibliques à 7 heures").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+        const rectQ7 = { 
+            x: questionsData.find(d => d.text === "Quels vitraux modernes ornent aujourd'hui l'Auditoire de Calvin ?").x, 
+            y: questionsData.find(d => d.text === "Quels vitraux modernes ornent aujourd'hui l'Auditoire de Calvin ?").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+        const rectA7 = { 
+            x: answersData.find(d => d.text === "Des vitraux modernes rouges et bleus").x, 
+            y: answersData.find(d => d.text === "Des vitraux modernes rouges et bleus").y, 
+            width: rectWidth, 
+            height: rectHeight 
+        };
+
+
+        // Vérifie si une ligne connecte correctement un rectangle question à un rectangle réponse
+        const isLineConnectingRects = (startRect, endRect) => {
+            const startPoint = lineData[0];
+            const endPoint = lineData[lineData.length - 1];
+            return (isPointInsideRect(startPoint, startRect) && isPointInsideRect(endPoint, endRect)) || 
+                   (isPointInsideRect(startPoint, endRect) && isPointInsideRect(endPoint, startRect)); 
+        };
+
+        // Fonction pour dessiner une ligne selon les connexions entre questions et réponses
+        const drawLineWithColorBasedOnRelations = () => {
+            let isCorrectConnection = false;
+
+            // Vérifie chaque connexion possible entre question et réponse
+            if (isLineConnectingRects(rectQ1, rectA1)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ1, rectA1);
+            } else if (isLineConnectingRects(rectQ2, rectA2)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ2, rectA2);
+            } else if (isLineConnectingRects(rectQ3, rectA3)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ3, rectA3);
+            } else if (isLineConnectingRects(rectQ4, rectA4)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ4, rectA4);
+            } else if (isLineConnectingRects(rectQ5, rectA5)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ5, rectA5);
+            } else if (isLineConnectingRects(rectQ6, rectA6)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ6, rectA6);
+            } else if (isLineConnectingRects(rectQ7, rectA7)) {
+                isCorrectConnection = true;
+                addValidatedConnection(rectQ7, rectA7);
+            }
+
+            // Ajoute une ligne temporaire au SVG
+            let line = svg.select(`.drawing-line-temp`);
+            if (line.empty()) {
+                line = svg.append("path")
+                    .attr("class", "drawing-line-temp")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none")
+                    .attr("stroke", "black"); 
+            }
+
+            const lineGenerator = d3.line()
+                .x(d => d[0])
+                .y(d => d[1])
+                .curve(d3.curveBasis);
+
+            line.attr("d", lineGenerator(lineData));
+
+           // Si la connexion est correcte, colore la ligne en vert
+            if (isCorrectConnection) {
+                line.attr("stroke", "green") 
+                    .classed("persist-line", true) 
+                    .classed("drawing-line-temp", false); 
+            }
+        };
+
+       // Ajoute une connexion validée entre une question et une réponse
+        const addValidatedConnection = (question, answer) => {
+            const connectionExists = validatedConnections.some(conn => conn.question === question && conn.answer === answer);
+
+            if (!connectionExists) {
+                validatedConnections.push({ question, answer });
+            }
+        };
+
+
+        // Gère le début d'un événement tactile (= l'utilisateur commence à tracer une ligne)
+        const touchstart = (event) => {
+            event.preventDefault();
+            lineData = [];
+            const [x, y] = getTouchCoordinates(event);
+            lineData.push([x, y]);
+        };
+
+        // Gère le mouvement tactile (l'utilisateur continue à tracer une ligne)
+        const touchmove = (event) => {
+            event.preventDefault();
+            const [x, y] = getTouchCoordinates(event);
+            lineData.push([x, y]);
+            drawLineWithColorBasedOnRelations();
+        };
+
+
+        // Gère la fin d'un événement tactile (l'utilisateur relâche la ligne)
+        const touchend = () => {
+            const startPoint = lineData[0];
+            const endPoint = lineData[lineData.length - 1];
+            const allRects = [...questionsData.map(d => ({ x: d.x, y: d.y, width: rectWidth, height: rectHeight })),
+                            ...answersData.map(d => ({ x: d.x, y: d.y, width: rectWidth, height: rectHeight }))];
+
+            const crossedQuestions = allRects.filter(rect => isPointInsideRect(startPoint, rect) || isPointInsideRect(endPoint, rect));
+
+            if (crossedQuestions.length !== 2) {
+                svg.selectAll(`.drawing-line-temp`).remove(); 
+                lineData = [];
+                return;
+            }
+
+            drawLineWithColorBasedOnRelations();
+
+           
+            svg.selectAll(`.drawing-line-temp:not(.persist-line)`).remove();
+
+           // Vérifie si la ligne connecte correctement une question et une réponse
+            if (validatedConnections.length === 7) {
+                // Création du conteneur pour le message "Bravo" et le bouton
+                const bravoContainer = document.createElement('div');
+                bravoContainer.style.position = 'fixed';
+                bravoContainer.style.top = '50%';
+                bravoContainer.style.left = '50%';
+                bravoContainer.style.transform = 'translate(-50%, -50%)';
+                bravoContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                bravoContainer.style.border = '2px solid #28a745';
+                bravoContainer.style.borderRadius = '10px';
+                bravoContainer.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.3)';
+                bravoContainer.style.padding = '20px';
+                bravoContainer.style.textAlign = 'center';
+                bravoContainer.style.zIndex = '1000';
+
+                // Ajouter le message "Bravo !"
+                const bravoMessage = document.createElement('h2');
+                bravoMessage.textContent = "Bravo ! Vous avez complété le jeu.";
+                bravoMessage.style.fontSize = '24px';
+                bravoMessage.style.marginBottom = '20px';
+                bravoMessage.style.color = '#28a745';
+
+                // Ajouter le bouton "Revenir à l'accueil"
+                const homeButton = document.createElement('button');
+                homeButton.textContent = 'Revenir à l\'accueil';
+                homeButton.style.fontSize = '18px';
+                homeButton.style.padding = '10px 20px';
+                homeButton.style.border = 'none';
+                homeButton.style.borderRadius = '5px';
+                homeButton.style.backgroundColor = 'rgba(76, 175, 80, 0.9)';
+                homeButton.style.color = '#ffffff';
+                homeButton.style.cursor = 'pointer';
+                homeButton.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.2)';
+
+                homeButton.addEventListener('click', () => {
+                    window.location.href = 'index.html';
+                });
+
+                // Ajouter le message et le bouton au conteneur
+                bravoContainer.appendChild(bravoMessage);
+                bravoContainer.appendChild(homeButton);
+
+                // Ajouter le conteneur au body
+                document.body.appendChild(bravoContainer);
+
+                console.log("BRAVO ! Toutes les connexions sont correctes !");
+                localStorage.setItem('auditoireGameCompleted', 'true');
+            }
+        };
+
+
+
+
+
+
+
+
+
+        
+        // Active les événements tactiles sur le SVG
+        svg.on("touchstart", touchstart)
+            .on("touchmove", touchmove)
+            .on("touchend", touchend)
+            .on("touchcancel", touchend);
+    </script>
+</body>
+</html>
